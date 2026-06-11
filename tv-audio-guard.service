@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 # Adjust paths and TV IP to your install
-ExecStart=/opt/tv-audio-guard/venv/bin/python3 /opt/tv-audio-guard/guard.py 192.168.1.50
+ExecStart=/opt/tv-audio-guard/venv/bin/python3 /opt/tv-audio-guard/guard.py <tv-ip>
 Restart=always
 RestartSec=5
 

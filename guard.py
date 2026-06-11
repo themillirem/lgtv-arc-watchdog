@@ -6,8 +6,8 @@ the TV reverts it to the built-in speakers — a common symptom of a flaky CEC
 handshake with an AV receiver or soundbar on power-on.
 
 Usage:
-    guard.py 192.168.1.50 --pair        # one-shot: trigger + verify TV pairing
-    guard.py 192.168.1.50               # run the watchdog loop (for systemd)
+    guard.py <tv-ip> --pair             # one-shot: trigger + verify TV pairing
+    guard.py <tv-ip>                    # run the watchdog loop (for systemd)
 """
 import argparse
 import asyncio
