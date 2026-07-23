@@ -221,6 +221,9 @@ async def _check_power_on_edge(client, args, state):
     except Exception:
         return
 
+    if args.log_state:
+        log("STATE %s power_state=%r" % (_now(), ps_state))
+
     have_prior = "last_power_state" in state
     was_active = state.get("last_power_state") == "Active"
     is_active = ps_state == "Active"
@@ -309,6 +312,11 @@ def main():
     p.add_argument("--bounce-gap", type=int, default=2,
                    help="seconds to hold --wrong before returning to "
                         "--target during a bounce (default: 2)")
+    p.add_argument("--log-state", action="store_true",
+                   help="with --capture/--bounce, log the raw power_state on "
+                        "every poll (not just on detected edges) — a "
+                        "temporary diagnostic aid for confirming what state "
+                        "transitions the TV actually reports overnight")
     args = p.parse_args()
 
     try:
