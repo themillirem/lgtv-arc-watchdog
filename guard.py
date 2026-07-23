@@ -172,6 +172,19 @@ async def bounce_after_edge(args):
             pass
 
 
+async def get_true_sound_output(client):
+    """The plain get_sound_output() call can report the intended value even
+    while the TV has silently reverted to a different one -- this is Mode B
+    (confirmed live 2026-07-23: get_sound_output() said 'external_arc' while
+    audio/getStatus.soundOutput said 'tv_speaker' during a real occurrence,
+    and correcting based on the latter fixed the actual audio routing).
+    audio/getStatus reflects the true routing for both Mode A and Mode B, so
+    it replaces get_sound_output() as the single source of truth here.
+    """
+    status = await client.request("audio/getStatus", None)
+    return status.get("soundOutput") if isinstance(status, dict) else None
+
+
 async def check_once(args, state):
     client = await make_client(args)
     newly_pairing = client.client_key is None
@@ -183,7 +196,7 @@ async def check_once(args, state):
         if args.capture or args.bounce:
             await _check_power_on_edge(client, args, state)
 
-        out = await client.get_sound_output()
+        out = await get_true_sound_output(client)
         if out == args.wrong and not state["set_disabled"]:
             try:
                 await client.change_sound_output(args.target)
