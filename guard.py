@@ -103,7 +103,10 @@ async def get_true_sound_output(client):
     source of truth here instead of get_sound_output().
     """
     status = await client.request("audio/getStatus", None)
-    return status.get("soundOutput") if isinstance(status, dict) else None
+    if not isinstance(status, dict):
+        return None
+    volume_status = status.get("volumeStatus")
+    return volume_status.get("soundOutput") if isinstance(volume_status, dict) else None
 
 
 async def check_once(args, state):
