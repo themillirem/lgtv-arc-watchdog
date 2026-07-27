@@ -89,12 +89,19 @@ Corrected sound output: tv_speaker -> external_arc
 `lineout`, `headphone`. If the TV rejects the target, the watchdog logs the
 TV's own list of valid `soundOutput` values and stops, so you can pick the
 right one. There's also `--wrong` (what to correct away from), `--interval`,
-and `--key-file`.
+`--key-file`, `--connect-timeout`, and `--poll-timeout`.
 
 ## How it behaves
 
-- Logs **only** on pairing and on corrections — journald stays clean
+- Logs **only** on pairing, on corrections, and on an abandoned/timed-out
+  poll cycle — journald stays clean otherwise
 - Swallows every connection error quietly (TV off is normal, not an error)
+- Every poll is bounded by `--connect-timeout`/`--poll-timeout` so a hung TV
+  handshake can't freeze the process silently — it happened once (a TV that
+  accepted the connection but never answered registration froze the service
+  for ~11 hours while `systemctl status` still said "active") — and the unit
+  file's `Type=notify`/`WatchdogSec=90` is a backstop that force-restarts the
+  service if it ever stops heartbeating for any other reason
 - `Restart=always` + the internal loop means it survives reboots, TV firmware
   updates, and network blips
 
