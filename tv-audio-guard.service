@@ -8,6 +8,20 @@ Wants=network-online.target
 ExecStart=/opt/tv-audio-guard/venv/bin/python3 /opt/tv-audio-guard/guard.py <tv-ip>
 Restart=always
 RestartSec=5
+# Type=notify + WatchdogSec turns on systemd's own liveness check: guard.py
+# sends a heartbeat every poll (see _sd_notify() in guard.py) via the
+# NOTIFY_SOCKET systemd provides for this unit type. If ~90s pass with no
+# heartbeat, systemd assumes the process has hung and force-restarts it,
+# rather than trusting `systemctl status` forever -- which is exactly what
+# happened on 2026-07-27: this service sat completely frozen for ~11 hours
+# while still reporting "active (running)" the whole time, because the
+# process itself never crashed, it just deadlocked on a hung TV handshake.
+# guard.py's own --connect-timeout/--poll-timeout are the real fix for that
+# specific hang; this is a backstop in case some other, not-yet-imagined
+# hang ever slips past those.
+Type=notify
+NotifyAccess=main
+WatchdogSec=90
 
 [Install]
 WantedBy=multi-user.target
