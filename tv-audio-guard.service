@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 # Adjust paths and TV IP to your install
-ExecStart=/opt/tv-audio-guard/venv/bin/python3 /opt/tv-audio-guard/guard.py <tv-ip>
+ExecStart=/opt/tv-audio-guard/venv/bin/python3 /opt/tv-audio-guard/guard.py 192.168.0.21
 Restart=always
 RestartSec=5
 # Type=notify + WatchdogSec turns on systemd's own liveness check: guard.py
@@ -22,6 +22,19 @@ RestartSec=5
 Type=notify
 NotifyAccess=main
 WatchdogSec=90
+# Second backstop layer, added 2026-08-04: even with the timeouts above
+# bounding each hang, a *chronic* connect failure (TCP/websocket ports open,
+# but the SSAP handshake with the TV never completes -- seen this day, TV
+# reachable but every poll cycle timing out) never trips WatchdogSec, because
+# each cycle still finishes and reports a heartbeat before the 90s deadline;
+# it just never succeeds. That let memory climb to 600M+ over 2 days with
+# nothing forcing a restart. MemoryMax force-restarts (via Restart=always)
+# if RSS ever exceeds a healthy multiple of the ~20M baseline; RuntimeMaxSec
+# forces a clean daily restart regardless, catching any other slow-leak or
+# stuck-state failure mode we haven't seen yet.
+MemoryAccounting=yes
+MemoryMax=300M
+RuntimeMaxSec=1d
 
 [Install]
 WantedBy=multi-user.target
